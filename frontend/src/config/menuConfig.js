@@ -2,7 +2,7 @@ import {
   FaHome, 
   FaUser, 
   FaCog, 
-  FaChart, 
+  FaChartBar, 
   FaUsers, 
   FaShoppingCart, 
   FaFileAlt, 
