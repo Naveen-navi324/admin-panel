@@ -1,14 +1,24 @@
 import React, { useState, useEffect } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
-import { FaChevronDown, FaChevronUp, FaBars } from 'react-icons/fa';
+import { FaChevronDown, FaChevronUp, FaBars, FaTimes } from 'react-icons/fa';
 import menuConfig from '../config/menuConfig';
 
 function Sidebar({ darkMode, sidebarOpen, toggleSidebar }) {
-  const role = localStorage.getItem('role') || 'user'; // Default to 'user' if no role set
+  const role = localStorage.getItem('role') || 'user';
   const location = useLocation();
   const [openMenuTitle, setOpenMenuTitle] = useState('');
+  const [isDesktop, setIsDesktop] = useState(window.innerWidth >= 1024);
 
   const menu = [...(menuConfig[role] || []), ...(menuConfig.common || [])];
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsDesktop(window.innerWidth >= 1024);
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   useEffect(() => {
     menu.forEach((item) => {
@@ -25,40 +35,50 @@ function Sidebar({ darkMode, sidebarOpen, toggleSidebar }) {
   return (
     <>
       {/* Mobile overlay */}
-      {sidebarOpen && (
+      {!isDesktop && sidebarOpen && (
         <div 
-          className="fixed inset-0 bg-black bg-opacity-50 z-30 lg:hidden"
+          className="fixed inset-0 bg-black bg-opacity-50 z-40"
           onClick={toggleSidebar}
         />
       )}
       
       {/* Sidebar */}
       <aside
-        className={`fixed top-0 left-0 z-40 h-full bg-white dark:bg-gray-900 shadow-xl border-r border-gray-200 dark:border-gray-700 transition-all duration-300 ease-in-out transform ${
-          sidebarOpen ? 'translate-x-0 w-72' : '-translate-x-full lg:translate-x-0 lg:w-20'
-        } lg:relative lg:translate-x-0 overflow-hidden flex flex-col`}
+        className={`
+          ${isDesktop ? 'relative' : 'fixed top-0 left-0 z-50'}
+          h-full bg-white dark:bg-gray-900 shadow-xl border-r border-gray-200 dark:border-gray-700 
+          transition-all duration-300 ease-in-out flex flex-col
+          ${isDesktop 
+            ? (sidebarOpen ? 'w-72' : 'w-20') 
+            : (sidebarOpen ? 'w-80 translate-x-0' : 'w-80 -translate-x-full')
+          }
+        `}
       >
         {/* Sidebar Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-indigo-800 dark:to-purple-800">
-          <div className={`flex items-center space-x-3 transition-opacity duration-300 ${sidebarOpen ? 'opacity-100' : 'lg:opacity-0'}`}>
-            <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center">
-              <span className="text-indigo-600 font-bold text-lg">A</span>
+        <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-indigo-800 dark:to-purple-800 flex-shrink-0">
+          <div className={`flex items-center space-x-3 transition-all duration-300 ${
+            sidebarOpen ? 'opacity-100' : isDesktop ? 'opacity-0' : 'opacity-100'
+          }`}>
+            <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center flex-shrink-0">
+              <span className="text-indigo-600 font-bold text-xl">A</span>
             </div>
-            {sidebarOpen && (
-              <div className="text-white">
-                <h1 className="font-bold text-lg">AppName</h1>
-                <p className="text-xs text-indigo-200">Admin Panel</p>
+            {(sidebarOpen || !isDesktop) && (
+              <div className="text-white min-w-0">
+                <h1 className="font-bold text-lg truncate">AppName</h1>
+                <p className="text-xs text-indigo-200 truncate">Admin Panel</p>
               </div>
             )}
           </div>
           
-          {/* Toggle button for mobile */}
-          <button
-            onClick={toggleSidebar}
-            className="lg:hidden text-white hover:bg-white hover:bg-opacity-20 p-2 rounded-lg transition-colors duration-200"
-          >
-            <FaBars size={16} />
-          </button>
+          {/* Close button for mobile */}
+          {!isDesktop && (
+            <button
+              onClick={toggleSidebar}
+              className="text-white hover:bg-white hover:bg-opacity-20 p-2 rounded-lg transition-colors duration-200"
+            >
+              <FaTimes size={16} />
+            </button>
+          )}
         </div>
 
         {/* Navigation Menu */}
@@ -76,20 +96,20 @@ function Sidebar({ darkMode, sidebarOpen, toggleSidebar }) {
                     }`}
                     title={item.title}
                   >
-                    <div className="flex items-center space-x-3">
-                      <item.icon className={`text-lg transition-colors duration-200 ${
+                    <div className="flex items-center space-x-3 min-w-0">
+                      <item.icon className={`text-lg transition-colors duration-200 flex-shrink-0 ${
                         openMenuTitle === item.title 
                           ? 'text-indigo-600 dark:text-indigo-400' 
                           : 'text-gray-500 dark:text-gray-400 group-hover:text-indigo-500 dark:group-hover:text-indigo-400'
                       }`} />
-                      <span className={`font-medium transition-all duration-300 ${
-                        sidebarOpen ? 'opacity-100 translate-x-0' : 'lg:opacity-0 lg:translate-x-4'
-                      }`}>
-                        {item.title}
-                      </span>
+                      {(sidebarOpen || !isDesktop) && (
+                        <span className="font-medium truncate">
+                          {item.title}
+                        </span>
+                      )}
                     </div>
-                    {sidebarOpen && (
-                      <div className={`transition-transform duration-200 ${
+                    {(sidebarOpen || !isDesktop) && (
+                      <div className={`transition-transform duration-200 flex-shrink-0 ${
                         openMenuTitle === item.title ? 'rotate-180' : 'rotate-0'
                       }`}>
                         <FaChevronDown className="text-xs" />
@@ -99,7 +119,7 @@ function Sidebar({ darkMode, sidebarOpen, toggleSidebar }) {
                   
                   {/* Submenu */}
                   <div className={`overflow-hidden transition-all duration-300 ease-in-out ${
-                    openMenuTitle === item.title && sidebarOpen 
+                    openMenuTitle === item.title && (sidebarOpen || !isDesktop)
                       ? 'max-h-96 opacity-100 mt-2' 
                       : 'max-h-0 opacity-0'
                   }`}>
@@ -117,7 +137,7 @@ function Sidebar({ darkMode, sidebarOpen, toggleSidebar }) {
                             }`
                           }
                         >
-                          <sub.icon className={`mr-3 text-base transition-colors duration-200 ${
+                          <sub.icon className={`mr-3 text-base transition-colors duration-200 flex-shrink-0 ${
                             location.pathname === sub.path 
                               ? 'text-indigo-600 dark:text-indigo-400' 
                               : 'text-gray-400 dark:text-gray-500 group-hover:text-indigo-500 dark:group-hover:text-indigo-400'
@@ -141,16 +161,16 @@ function Sidebar({ darkMode, sidebarOpen, toggleSidebar }) {
                     }`
                   }
                 >
-                  <item.icon className={`text-lg transition-colors duration-200 ${
+                  <item.icon className={`text-lg transition-colors duration-200 flex-shrink-0 ${
                     location.pathname === item.path 
                       ? 'text-indigo-600 dark:text-indigo-400' 
                       : 'text-gray-500 dark:text-gray-400 group-hover:text-indigo-500 dark:group-hover:text-indigo-400'
                   }`} />
-                  <span className={`ml-3 font-medium transition-all duration-300 ${
-                    sidebarOpen ? 'opacity-100 translate-x-0' : 'lg:opacity-0 lg:translate-x-4'
-                  }`}>
-                    {item.title}
-                  </span>
+                  {(sidebarOpen || !isDesktop) && (
+                    <span className="ml-3 font-medium truncate">
+                      {item.title}
+                    </span>
+                  )}
                 </NavLink>
               )
             )}
@@ -158,16 +178,16 @@ function Sidebar({ darkMode, sidebarOpen, toggleSidebar }) {
         </div>
 
         {/* Sidebar Footer */}
-        <div className="p-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
-          <div className={`flex items-center space-x-3 transition-opacity duration-300 ${
-            sidebarOpen ? 'opacity-100' : 'lg:opacity-0'
+        <div className="p-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 flex-shrink-0">
+          <div className={`flex items-center space-x-3 transition-all duration-300 ${
+            sidebarOpen || !isDesktop ? 'opacity-100' : 'opacity-0'
           }`}>
-            <div className="w-8 h-8 bg-indigo-100 dark:bg-indigo-900 rounded-full flex items-center justify-center">
+            <div className="w-10 h-10 bg-indigo-100 dark:bg-indigo-900 rounded-full flex items-center justify-center flex-shrink-0">
               <span className="text-indigo-600 dark:text-indigo-400 font-semibold text-sm">
                 {(role || 'U').charAt(0).toUpperCase()}
               </span>
             </div>
-            {sidebarOpen && (
+            {(sidebarOpen || !isDesktop) && (
               <div className="min-w-0 flex-1">
                 <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
                   {role ? `${role.charAt(0).toUpperCase()}${role.slice(1)}` : 'User'}

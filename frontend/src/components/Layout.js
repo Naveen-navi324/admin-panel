@@ -4,7 +4,7 @@ import Sidebar from './Sidebar';
 import { FaBars, FaMoon, FaSun } from 'react-icons/fa';
 
 function Layout() {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(true); // Default to true for desktop
   const [darkMode, setDarkMode] = useState(false);
 
   // Initialize dark mode from localStorage
@@ -19,7 +19,18 @@ function Layout() {
   // Initialize sidebar state based on screen size
   useEffect(() => {
     const handleResize = () => {
-      setSidebarOpen(window.innerWidth >= 1024);
+      // Always keep sidebar open on desktop, allow toggling
+      if (window.innerWidth < 1024) {
+        setSidebarOpen(false); // Closed on mobile by default
+      } else {
+        // On desktop, check localStorage for user preference
+        const savedSidebarState = localStorage.getItem('sidebarOpen');
+        if (savedSidebarState !== null) {
+          setSidebarOpen(savedSidebarState === 'true');
+        } else {
+          setSidebarOpen(true); // Default to open on desktop
+        }
+      }
     };
     
     handleResize();
@@ -28,7 +39,13 @@ function Layout() {
   }, []);
 
   const toggleSidebar = () => {
-    setSidebarOpen(!sidebarOpen);
+    const newSidebarState = !sidebarOpen;
+    setSidebarOpen(newSidebarState);
+    
+    // Save sidebar state to localStorage for desktop
+    if (window.innerWidth >= 1024) {
+      localStorage.setItem('sidebarOpen', newSidebarState.toString());
+    }
   };
 
   const toggleDarkMode = () => {
@@ -45,7 +62,7 @@ function Layout() {
 
   return (
     <div className={`min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-300 ${darkMode ? 'dark' : ''}`}>
-      <div className="flex">
+      <div className="flex h-screen">
         {/* Sidebar */}
         <Sidebar 
           darkMode={darkMode} 
@@ -53,31 +70,22 @@ function Layout() {
           toggleSidebar={toggleSidebar}
         />
 
-        {/* Main Content */}
-        <div className={`flex-1 transition-all duration-300 ${
-          sidebarOpen ? 'lg:ml-72' : 'lg:ml-20'
-        }`}>
+        {/* Main Content Area */}
+        <div className="flex-1 flex flex-col overflow-hidden">
           {/* Top Navigation Bar */}
-          <header className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700 sticky top-0 z-20">
-            <div className="flex items-center justify-between px-4 py-3">
+          <header className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700 z-20 flex-shrink-0">
+            <div className="flex items-center justify-between px-6 py-4">
               <div className="flex items-center space-x-4">
-                {/* Mobile menu button */}
+                {/* Sidebar toggle button */}
                 <button
                   onClick={toggleSidebar}
-                  className="lg:hidden text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 p-2 rounded-lg transition-colors duration-200"
+                  className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 p-2 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  title="Toggle sidebar"
                 >
-                  <FaBars size={20} />
+                  <FaBars size={18} />
                 </button>
                 
-                {/* Desktop sidebar toggle */}
-                <button
-                  onClick={toggleSidebar}
-                  className="hidden lg:block text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 p-2 rounded-lg transition-colors duration-200"
-                >
-                  <FaBars size={16} />
-                </button>
-                
-                <div className="text-lg font-semibold text-gray-900 dark:text-white">
+                <div className="text-xl font-semibold text-gray-900 dark:text-white">
                   Dashboard
                 </div>
               </div>
@@ -86,18 +94,20 @@ function Layout() {
                 {/* Dark mode toggle */}
                 <button
                   onClick={toggleDarkMode}
-                  className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 p-2 rounded-lg transition-colors duration-200"
+                  className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 p-2 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                   title={darkMode ? 'Switch to light mode' : 'Switch to dark mode'}
                 >
-                  {darkMode ? <FaSun size={16} /> : <FaMoon size={16} />}
+                  {darkMode ? <FaSun size={18} /> : <FaMoon size={18} />}
                 </button>
               </div>
             </div>
           </header>
 
           {/* Page Content */}
-          <main className="p-6">
-            <Outlet />
+          <main className="flex-1 overflow-y-auto bg-gray-50 dark:bg-gray-900">
+            <div className="p-8 max-w-7xl mx-auto">
+              <Outlet />
+            </div>
           </main>
         </div>
       </div>
