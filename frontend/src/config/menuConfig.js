@@ -25,7 +25,7 @@ const menuConfig = {
     },
     {
       title: 'Analytics',
-      icon: FaChart,
+      icon: FaChartBar,
       submenu: [
         {
           title: 'Reports',
